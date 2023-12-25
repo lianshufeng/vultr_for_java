@@ -1,3 +1,11 @@
 spring:
   profiles:
     active: prod
+
+
+vultr:
+  create-instances-plant:
+    country: US
+    minMonthlyCost: 0.1
+    maxMonthlyCost: 5
+    snapshot_id: ecf0eeb7-5b73-4e01-93e5-7af0e46a9a84

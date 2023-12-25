@@ -12,9 +12,11 @@ import org.springframework.context.annotation.ComponentScan;
 
 import javax.swing.*;
 
-@ComponentScan("com.github.vultr.core")
+
 @SpringBootApplication
+@ComponentScan("com.github.vultr.core")
 public class VultrApplication implements ApplicationRunner {
+
 
     @Autowired
     private SpringBeanHelper springBeanHelper;
@@ -29,7 +31,6 @@ public class VultrApplication implements ApplicationRunner {
     public void run(ApplicationArguments args) throws Exception {
         springBeanHelper.injection(mainFrame);
         mainFrame.setVisible(true);
-
         mainFrame.refreshList();
     }
 }

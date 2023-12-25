@@ -1,5 +1,7 @@
 package com.github.vultr.core.windows;
 
+import com.github.vultr.core.model.CreateInstancesModel;
+import com.github.vultr.core.model.PlantModel;
 import com.github.vultr.core.type.TableColumn;
 import com.github.vultr.core.service.VultrService;
 import com.github.vultr.core.util.DateUtil;
@@ -7,6 +9,7 @@ import com.github.vultr.core.util.GroovyUtil;
 import com.github.vultr.core.util.JsonUtil;
 import lombok.Data;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 
@@ -14,11 +17,13 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.*;
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+@Slf4j
 public class MainFrame extends JFrame {
 
 
@@ -44,8 +49,10 @@ public class MainFrame extends JFrame {
      */
     public void refreshList() {
         var ret = vultrService.instances();
+        log.info("刷新示例 : {} ", ret);
+        int rowCount = tableModel.getRowCount();
         //清空
-        for (int i = 0; i < tableModel.getRowCount(); i++) {
+        for (int i = 0; i < rowCount; i++) {
             tableModel.removeRow(0);
         }
         //添加
@@ -53,13 +60,21 @@ public class MainFrame extends JFrame {
         for (int i = 0; i < size; i++) {
             Map<String, Object> item = (Map<String, Object>) GroovyUtil.runScript(ret, "instances[" + i + "]");
 
+            //创建时间
+            Long date_created = DateUtil.toTime((String) item.get("date_created"));
+
             Optional.ofNullable(item.get("date_created")).ifPresent((it) -> {
-                long time = (System.currentTimeMillis() - DateUtil.toTime((String) item.get("date_created"))) / 1000;
+                long time = (System.currentTimeMillis() - date_created) / 1000;
                 item.put("date_created", DateUtil.format(time));
             });
 
             //计划转换为每小时
             Optional.ofNullable(item.get("plan")).ifPresent((it) -> {
+                //每小时计划
+                double hoursPlant = vultrService.getHoursCost(String.valueOf(it));
+                //计算出
+                BigDecimal roundedNumber = new BigDecimal(hoursPlant * ((double) date_created / 1000 / 60 / 60)).setScale(3, BigDecimal.ROUND_HALF_UP);
+                roundedNumber.doubleValue();
                 item.put("plan", vultrService.getHoursCost(String.valueOf(it)) + " / 小时");
             });
             tableModel.addRow(toTableRow(item));
@@ -113,7 +128,14 @@ public class MainFrame extends JFrame {
             @Override
             public void mouseClicked(MouseEvent e) {
                 super.mouseClicked(e);
-                System.out.println("创建实例...");
+                CreateInstancesModel createInstancesModel = vultrService.getCreateInstancesPlant();
+                int option = JOptionPane.showConfirmDialog(MainFrame.this, "是否创建实例 : \r\n %s".formatted(JsonUtil.toJson(createInstancesModel, true)), "提示", JOptionPane.YES_NO_OPTION);
+                if (option == 0) {
+                    var ret = vultrService.createInstances(createInstancesModel);
+                    log.info("create : {}", ret);
+                    MainFrame.this.refreshList();
+                }
+
             }
         });
 

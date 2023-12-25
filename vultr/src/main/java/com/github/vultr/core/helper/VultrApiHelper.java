@@ -2,6 +2,7 @@ package com.github.vultr.core.helper;
 
 import com.github.vultr.core.conf.ProxyConf;
 import com.github.vultr.core.conf.VultrConf;
+import com.github.vultr.core.model.CreateInstancesModel;
 import com.github.vultr.core.util.HttpClient;
 import com.github.vultr.core.util.JsonUtil;
 import lombok.SneakyThrows;
@@ -31,12 +32,44 @@ public class VultrApiHelper {
     }
 
 
+    /**
+     * 获取计划
+     *
+     * @return
+     */
     public Map<String, Object> plans() {
         return get("v2/plans");
     }
 
+
+    /**
+     * 删除实例
+     *
+     * @param id
+     * @return
+     */
     public Map<String, Object> deleteInstances(String id) {
         return delete("v2/instances/%s".formatted(id));
+    }
+
+    /**
+     * 创建实例
+     *
+     * @param createInstancesModel
+     * @return
+     */
+    public Map<String, Object> createInstances(CreateInstancesModel createInstancesModel) {
+        return postJson("v2/instances", createInstancesModel);
+    }
+
+
+    /**
+     * 查询所有区域
+     *
+     * @return
+     */
+    public Map<String, Object> regions() {
+        return get("v2/regions");
     }
 
 
@@ -56,10 +89,14 @@ public class VultrApiHelper {
         return resultToObject(resultBean);
     }
 
-    private Map<String, Object> post(String uri, Object dataObject) {
+    private Map<String, Object> postJson(String uri, Object dataObject) {
         HttpClient httpClient = createHttpClient();
         byte[] bin = dataObject == null ? null : JsonUtil.toJson(dataObject).getBytes();
-        HttpClient.ResultBean resultBean = httpClient.ReadDocuments(url(uri), "POST", bin, Map.of("Authorization", "Bearer " + vultrConf.getApiKey().trim()));
+        HttpClient.ResultBean resultBean = httpClient.ReadDocuments(url(uri), "POST", bin,
+                Map.of(
+                        "Authorization", "Bearer " + vultrConf.getApiKey().trim(),
+                        "Content-Type", "application/json"
+                ));
         return resultToObject(resultBean);
     }
 

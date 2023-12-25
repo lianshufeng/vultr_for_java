@@ -11,7 +11,7 @@ public enum TableColumn {
     ipv4("main_ip"),
     ipv6("v6_main_ip"),
     状态("status"),
-    计划("plan"),
+    费用("plan"),
     时间("date_created"),
     ;
 

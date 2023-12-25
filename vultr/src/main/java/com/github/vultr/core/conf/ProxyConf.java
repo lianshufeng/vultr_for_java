@@ -8,6 +8,8 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationProperties("proxy")
 public class ProxyConf {
+
     private String host;
+
     private int port;
 }
